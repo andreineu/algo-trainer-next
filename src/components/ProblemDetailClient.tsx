@@ -213,6 +213,7 @@ export default function ProblemDetailClient({ problem }: { problem: Problem }): 
                                             {caseIcon(c)}
                                         </ListItemIcon>
                                         <ListItemText
+                                            disableTypography
                                             primary={
                                                 <Typography
                                                     variant="subtitle2"
