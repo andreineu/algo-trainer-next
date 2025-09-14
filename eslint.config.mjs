@@ -11,8 +11,6 @@ const compat = new FlatCompat({ baseDirectory: __dirname });
 export default [
     ...compat.extends(
         'next/core-web-vitals',
-        'airbnb',
-        'airbnb-typescript',
         'plugin:@typescript-eslint/strict-type-checked',
         'plugin:react-hooks/recommended',
         'plugin:jsx-a11y/recommended',
@@ -38,6 +36,7 @@ export default [
             '@stylistic': stylistic,
         },
         rules: {
+            'no-unused-vars': 'off',
             'react/react-in-jsx-scope': 'off',
             'react/jsx-props-no-spreading': 'off',
             'import/prefer-default-export': 'off',
@@ -77,5 +76,11 @@ export default [
     {
         files: ['**/*.js'],
         languageOptions: { parserOptions: { project: null } },
+    },
+    {
+        files: ['**/*.ts', '**/*.tsx'],
+        rules: {
+            'no-unused-vars': 'off',
+        },
     },
 ];

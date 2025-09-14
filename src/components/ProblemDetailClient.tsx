@@ -42,9 +42,7 @@ function caseBorderColor(c: { pass: boolean; error?: string | undefined }): stri
     return 'error.main';
 }
 
-function summaryColor(status: string): 'success' | 'error' | 'warning' | 'default' {
-    const s = String(status);
-
+function summaryColor(s: string): 'success' | 'error' | 'warning' | 'default' {
     if (s === 'Passed') return 'success';
 
     if (s === 'Failed') return 'error';
@@ -144,12 +142,14 @@ export default function ProblemDetailClient({ problem }: { problem: Problem }): 
                     setOpen(false);
                 }}
                 ModalProps={{ keepMounted: true }}
-                PaperProps={{
-                    sx: {
-                        bgcolor: 'background.default',
-                        backgroundImage: 'none',
-                        borderLeft: '1px solid',
-                        borderColor: 'divider',
+                slotProps={{
+                    paper: {
+                        sx: {
+                            bgcolor: 'background.default',
+                            backgroundImage: 'none',
+                            borderLeft: '1px solid',
+                            borderColor: 'divider',
+                        },
                     },
                 }}
             >
