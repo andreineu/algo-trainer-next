@@ -26,15 +26,12 @@ jobs:
             - name: Install
               run: npm ci
 
-            # Step 1: Lint
             - name: Lint
               run: npm run ci:lint
 
-            # Step 2: Typecheck
             - name: Typecheck
               run: npm run ci:typecheck
 
-            # Step 3: Build
             - name: Build
               run: npm run ci:build
 

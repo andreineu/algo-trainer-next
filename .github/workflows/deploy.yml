@@ -1,4 +1,4 @@
-name: Deploy (Docker + Compose)
+name: Deploy (simple Docker over SSH)
 on:
     push:
         branches: [main]
@@ -8,32 +8,12 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v4
-
-            - name: Build image
-              run: scripts/deploy/build_image.sh
-
-            - name: Pack image
-              run: scripts/deploy/pack_image.sh
-
-            - name: Upload tar & remote script
-              uses: appleboy/scp-action@v0.1.7
-              with:
-                  host: ${{ secrets.VPS_HOST }}
-                  username: ${{ secrets.VPS_USER }}
-                  key: ${{ secrets.SSH_PRIVATE_KEY }}
-                  source: |
-                      artifact/algotrainer-image.tar.gz
-                      scripts/deploy/remote_load_run.sh
-                  target: ${{ secrets.VPS_UPLOAD_DIR }}
-
-            - name: Load & restart via Compose
-              uses: appleboy/ssh-action@v1.0.3
-              with:
-                  host: ${{ secrets.VPS_HOST }}
-                  username: ${{ secrets.VPS_USER }}
-                  key: ${{ secrets.SSH_PRIVATE_KEY }}
-                  script: |
-                      chmod +x ${{ secrets.VPS_UPLOAD_DIR }}/remote_load_run.sh
-                      ${{ secrets.VPS_UPLOAD_DIR }}/remote_load_run.sh \
-                        "${{ secrets.VPS_UPLOAD_DIR }}/algotrainer-image.tar.gz" \
-                        "${{ secrets.VPS_COMPOSE_DIR }}"
+            - name: Deploy
+              env:
+                  SSH_HOST: ${{ secrets.VPS_HOST }}
+                  SSH_USER: ${{ secrets.VPS_USER }}
+                  SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+                  REMOTE_DIR: ${{ secrets.VPS_UPLOAD_DIR }}
+                  CONTAINER_NAME: algotrainer
+                  LOCAL_PORT: '3000'
+              run: bash scripts/deploy/deploy_docker_over_ssh.sh
