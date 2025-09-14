@@ -4,7 +4,7 @@ import {
     Box,
     CircularProgress,
     Divider,
-    Drawer,
+    Modal,
     Fab,
     IconButton,
     Stack,
@@ -22,39 +22,41 @@ import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import HighlightOffIcon from '@mui/icons-material/HighlightOff';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import type { ReactElement } from 'react';
-import type { Problem } from '@/lib/types';
+import type { Problem, RunCaseResult, RunResult } from '@/lib/types';
+import { RunStatus } from '@/lib/enums';
 import Editor from '@monaco-editor/react';
 import { useProblemRunner } from '@/hooks/useProblemRunner';
 import { safeJson } from '@/lib/format';
-// no enum import needed here; we compare string values for display
 
-function caseStatusLabel(c: { pass: boolean; error?: string | undefined }): string {
-    if (c.pass) return 'Passed';
-    if (typeof c.error === 'string' && c.error.length > 0) return 'Error';
+function caseStatusLabel(runCase: RunCaseResult): string {
+    if (runCase.pass) return 'Passed';
+    if (typeof runCase.error === 'string' && runCase.error.length > 0) return 'Error';
 
     return 'Failed';
 }
 
-function caseBorderColor(c: { pass: boolean; error?: string | undefined }): string {
-    if (c.pass) return 'success.main';
-    if (typeof c.error === 'string' && c.error.length > 0) return 'warning.main';
+function caseBorderColor(runCase: RunCaseResult): string {
+    if (runCase.pass) return 'success.main';
+    if (typeof runCase.error === 'string' && runCase.error.length > 0) return 'warning.main';
 
     return 'error.main';
 }
 
-function summaryColor(s: string): 'success' | 'error' | 'warning' | 'default' {
-    if (s === 'Passed') return 'success';
+function summaryColor(run: RunResult | null): 'success' | 'error' | 'warning' | 'default' {
+    const colors = {
+        [RunStatus.Passed]: 'success',
+        [RunStatus.Pending]: 'default',
+        [RunStatus.Failed]: 'error',
+        [RunStatus.Timeout]: 'warning',
+        [RunStatus.Error]: 'error',
+    } as const;
 
-    if (s === 'Failed') return 'error';
-
-    if (s === 'Timeout' || s === 'Error') return 'warning';
-
-    return 'default';
+    return typeof run?.summary.status !== 'undefined' ? colors[run.summary.status] : 'default';
 }
 
-function caseIcon(c: { pass: boolean; error?: string | undefined }): ReactElement {
-    if (c.pass) return <CheckCircleOutlineIcon color="success" fontSize="small" />;
-    if (typeof c.error === 'string' && c.error.length > 0)
+function caseIcon(runCase: RunCaseResult): ReactElement {
+    if (runCase.pass) return <CheckCircleOutlineIcon color="success" fontSize="small" />;
+    if (typeof runCase.error === 'string' && runCase.error.length > 0)
         return <ErrorOutlineIcon color="warning" fontSize="small" />;
 
     return <HighlightOffIcon color="error" fontSize="small" />;
@@ -88,13 +90,19 @@ function LabelAndCode({ label, value }: { label: string; value: unknown }): Reac
     );
 }
 
-export default function ProblemDetailClient({ problem }: { problem: Problem }): ReactElement {
+export default function ProblemDetail({ problem }: { problem: Problem }): ReactElement {
     const { code, setCode, open, setOpen, loading, result, handleRun } = useProblemRunner(problem);
 
-    const drawerWidth = 400;
-
     return (
-        <Box sx={{ height: '100vh', position: 'relative', p: '2rem' }}>
+        <Box
+            sx={{
+                height: '100vh',
+                maxWidth: '1600px',
+                mx: 'auto',
+                position: 'relative',
+                p: '2rem',
+            }}
+        >
             <Paper sx={{ height: '100%', overflow: 'hidden' }} elevation={3}>
                 <Editor
                     theme="vs-dark"
@@ -135,25 +143,33 @@ export default function ProblemDetailClient({ problem }: { problem: Problem }): 
                 Run
             </Fab>
 
-            <Drawer
-                anchor="right"
+            <Modal
                 open={open}
                 onClose={() => {
                     setOpen(false);
                 }}
-                ModalProps={{ keepMounted: true }}
-                slotProps={{
-                    paper: {
-                        sx: {
-                            bgcolor: 'background.default',
-                            backgroundImage: 'none',
-                            borderLeft: '1px solid',
-                            borderColor: 'divider',
-                        },
-                    },
-                }}
+                keepMounted
             >
-                <Box sx={{ width: drawerWidth, p: 2 }} role="presentation">
+                <Box
+                    role="dialog"
+                    aria-label="Run results"
+                    sx={{
+                        position: 'fixed',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        width: { xs: '90vw', sm: 640, md: 720 },
+                        maxHeight: '85vh',
+                        p: 2,
+                        bgcolor: 'background.default',
+                        backgroundImage: 'none',
+                        border: '1px solid',
+                        borderColor: 'divider',
+                        overflow: 'auto',
+                        boxShadow: 24,
+                        borderRadius: 1,
+                    }}
+                >
                     <Stack direction="row" alignItems="center" justifyContent="space-between">
                         <Typography variant="h6">Results</Typography>
                         <IconButton
@@ -176,7 +192,7 @@ export default function ProblemDetailClient({ problem }: { problem: Problem }): 
                                 <Chip
                                     size="small"
                                     label={result.summary.status}
-                                    color={summaryColor(result.summary.status)}
+                                    color={summaryColor(result)}
                                 />
                                 <Chip
                                     size="small"
@@ -249,7 +265,7 @@ export default function ProblemDetailClient({ problem }: { problem: Problem }): 
                         </Box>
                     )}
                 </Box>
-            </Drawer>
+            </Modal>
         </Box>
     );
 }

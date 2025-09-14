@@ -1,7 +1,7 @@
 import type { ReactElement } from 'react';
 import { notFound } from 'next/navigation';
 import { getProblemBySlug, getProblemSlugs } from '@/lib/problems';
-import ProblemDetailClient from '@/components/ProblemDetailClient';
+import ProblemDetail from '@/components/ProblemDetail';
 
 export function generateStaticParams(): { slug: string }[] {
     return getProblemSlugs().map((slug) => ({ slug }));
@@ -17,5 +17,5 @@ export default async function ProblemDetailPage({
 
     if (!problem) return notFound();
 
-    return <ProblemDetailClient problem={problem} />;
+    return <ProblemDetail problem={problem} />;
 }
