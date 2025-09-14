@@ -1,0 +1,44 @@
+name: Deploy (Docker, no registry)
+
+on:
+    push:
+        branches: [main]
+
+jobs:
+    deploy:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+
+            # Build Docker image
+            - name: Build image
+              run: scripts/deploy/build_image.sh
+
+            # Save image to a tar.gz artifact
+            - name: Pack image
+              run: scripts/deploy/pack_image.sh
+
+            # Upload image tar + remote script to VPS
+            - name: Upload to VPS
+              uses: appleboy/scp-action@v0.1.7
+              with:
+                  host: ${{ secrets.VPS_HOST }}
+                  username: ${{ secrets.VPS_USER }}
+                  key: ${{ secrets.SSH_PRIVATE_KEY }}
+                  source: |
+                      artifact/algotrainer-image.tar.gz
+                      scripts/deploy/remote_load_run.sh
+                  target: ${{ secrets.VPS_UPLOAD_DIR }}
+
+            # Load & run on VPS
+            - name: Load and restart via Compose
+              uses: appleboy/ssh-action@v1.0.3
+              with:
+                  host: ${{ secrets.VPS_HOST }}
+                  username: ${{ secrets.VPS_USER }}
+                  key: ${{ secrets.SSH_PRIVATE_KEY }}
+                  script: |
+                      chmod +x ${{ secrets.VPS_UPLOAD_DIR }}/remote_load_run.sh
+                      ${{ secrets.VPS_UPLOAD_DIR }}/remote_load_run.sh \
+                        "${{ secrets.VPS_UPLOAD_DIR }}/algotrainer-image.tar.gz" \
+                        "${{ secrets.VPS_COMPOSE_DIR }}"
