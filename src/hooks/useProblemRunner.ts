@@ -1,50 +1,66 @@
-"use client";
-import { useCallback, useMemo, useState } from 'react';
-import { Problem } from '@/lib/types';
-import { RunResult } from '@/lib/types';
+'use client';
+
+import { useCallback, useState, type Dispatch, type SetStateAction } from 'react';
+import type { Problem, RunResult } from '@/lib/types';
 import { RunStatus } from '@/lib/enums';
 import { runCodeInWorker } from '@/lib/workerRunner';
 import { saveRun } from '@/lib/storage';
 
 type Options = {
-  timeLimitMs?: number;
+    timeLimitMs?: number;
 };
 
 const DEFAULT_TIME_LIMIT = 2500;
 
-export function useProblemRunner(problem: Problem, opts?: Options) {
-  const [code, setCode] = useState(problem.starterCode);
-  const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<RunResult | null>(null);
+export type UseProblemRunnerReturn = {
+    code: string;
+    setCode: Dispatch<SetStateAction<string>>;
+    open: boolean;
+    setOpen: Dispatch<SetStateAction<boolean>>;
+    loading: boolean;
+    result: RunResult | null;
+    handleRun: () => Promise<void>;
+};
 
-  const timeLimitMs = opts?.timeLimitMs ?? DEFAULT_TIME_LIMIT;
+export function useProblemRunner(problem: Problem, opts?: Options): UseProblemRunnerReturn {
+    const [code, setCode] = useState(problem.starterCode);
+    const [open, setOpen] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [result, setResult] = useState<RunResult | null>(null);
 
-  const handleRun = useCallback(async () => {
-    setOpen(true);
-    setLoading(true);
-    try {
-      const res = await runCodeInWorker({ code, tests: problem.tests, timeLimitMs });
-      setResult(res);
-      saveRun({ problemId: problem.id, code, result: res });
-    } catch (e) {
-      setResult({
-        cases: [],
-        summary: { total: 0, passed: 0, failed: 0, status: RunStatus.Error },
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [code, problem.id, problem.tests, timeLimitMs]);
+    const timeLimitMs = opts?.timeLimitMs ?? DEFAULT_TIME_LIMIT;
 
-  return {
-    code,
-    setCode,
-    open,
-    setOpen,
-    loading,
-    result,
-    handleRun,
-  } as const;
+    const handleRun = useCallback(async () => {
+        setOpen(true);
+        setLoading(true);
+
+        try {
+            const res = await runCodeInWorker({
+                code,
+                tests: problem.tests,
+                timeLimitMs,
+                functionName: problem.functionName,
+            });
+
+            setResult(res);
+            saveRun({ problemId: problem.id, code, result: res });
+        } catch {
+            setResult({
+                cases: [],
+                summary: { total: 0, passed: 0, failed: 0, status: RunStatus.Error },
+            });
+        } finally {
+            setLoading(false);
+        }
+    }, [code, problem.id, problem.tests, problem.functionName, timeLimitMs]);
+
+    return {
+        code,
+        setCode,
+        open,
+        setOpen,
+        loading,
+        result,
+        handleRun,
+    } as const;
 }
-
