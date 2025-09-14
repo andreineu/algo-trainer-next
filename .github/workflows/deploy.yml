@@ -1,5 +1,4 @@
-name: Deploy (Docker, no registry)
-
+name: Deploy (Docker + Compose)
 on:
     push:
         branches: [main]
@@ -10,16 +9,13 @@ jobs:
         steps:
             - uses: actions/checkout@v4
 
-            # Build Docker image
             - name: Build image
               run: scripts/deploy/build_image.sh
 
-            # Save image to a tar.gz artifact
             - name: Pack image
               run: scripts/deploy/pack_image.sh
 
-            # Upload image tar + remote script to VPS
-            - name: Upload to VPS
+            - name: Upload tar & remote script
               uses: appleboy/scp-action@v0.1.7
               with:
                   host: ${{ secrets.VPS_HOST }}
@@ -30,8 +26,7 @@ jobs:
                       scripts/deploy/remote_load_run.sh
                   target: ${{ secrets.VPS_UPLOAD_DIR }}
 
-            # Load & run on VPS
-            - name: Load and restart via Compose
+            - name: Load & restart via Compose
               uses: appleboy/ssh-action@v1.0.3
               with:
                   host: ${{ secrets.VPS_HOST }}
