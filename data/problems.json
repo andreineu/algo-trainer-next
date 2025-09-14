@@ -1,0 +1,44 @@
+[
+  {
+    "id": "two-sum",
+    "slug": "two-sum",
+    "title": "Two Sum",
+    "difficulty": "Easy",
+    "descriptionMd": "Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target. Assume exactly one solution.",
+    "functionName": "twoSum",
+    "starterCode": "function twoSum(nums, target) {\n  // Return an array of two indices\n  const map = new Map();\n  for (let i = 0; i < nums.length; i++) {\n    const complement = target - nums[i];\n    if (map.has(complement)) return [map.get(complement), i];\n    map.set(nums[i], i);\n  }\n  return [];\n}\n\nmodule.exports = twoSum;",
+    "tests": [
+      { "input": { "nums": [2,7,11,15], "target": 9 }, "output": [0,1] },
+      { "input": { "nums": [3,2,4], "target": 6 }, "output": [1,2] },
+      { "input": { "nums": [3,3], "target": 6 }, "output": [0,1] }
+    ]
+  },
+  {
+    "id": "valid-palindrome",
+    "slug": "valid-palindrome",
+    "title": "Valid Palindrome",
+    "difficulty": "Easy",
+    "descriptionMd": "Given a string s, return true if it is a palindrome, considering only alphanumeric characters and ignoring cases.",
+    "functionName": "isPalindrome",
+    "starterCode": "function isPalindrome(s) {\n  const cleaned = (s || '').toLowerCase().replace(/[^a-z0-9]/g, '');\n  let i = 0, j = cleaned.length - 1;\n  while (i < j) {\n    if (cleaned[i] !== cleaned[j]) return false;\n    i++; j--;\n  }\n  return true;\n}\n\nmodule.exports = isPalindrome;",
+    "tests": [
+      { "input": { "s": "A man, a plan, a canal: Panama" }, "output": true },
+      { "input": { "s": "race a car" }, "output": false },
+      { "input": { "s": " " }, "output": true }
+    ]
+  },
+  {
+    "id": "merge-intervals",
+    "slug": "merge-intervals",
+    "title": "Merge Intervals",
+    "difficulty": "Medium",
+    "descriptionMd": "Given an array of intervals where intervals[i] = [starti, endi], merge all overlapping intervals and return an array of the non-overlapping intervals.",
+    "functionName": "merge",
+    "starterCode": "function merge(intervals) {\n  if (!Array.isArray(intervals) || intervals.length === 0) return [];\n  intervals.sort((a, b) => a[0] - b[0]);\n  const res = [intervals[0].slice()];\n  for (let i = 1; i < intervals.length; i++) {\n    const [start, end] = intervals[i];\n    const last = res[res.length - 1];\n    if (start <= last[1]) {\n      last[1] = Math.max(last[1], end);\n    } else {\n      res.push([start, end]);\n    }\n  }\n  return res;\n}\n\nmodule.exports = merge;",
+    "tests": [
+      { "input": { "intervals": [[1,3],[2,6],[8,10],[15,18]] }, "output": [[1,6],[8,10],[15,18]] },
+      { "input": { "intervals": [[1,4],[4,5]] }, "output": [[1,5]] }
+    ]
+  }
+]
+
